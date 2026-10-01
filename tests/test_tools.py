@@ -1,4 +1,4 @@
-from bugsquad.tools import read_file
+from bugsquad.tools import list_files, read_file
 
 
 def test_read_file_return_content(tmp_path):
@@ -22,4 +22,32 @@ def test_file_blocks_path_outside_workspace(tmp_path):
 
     assert result.startswith("ERROR: Path is outside the workspace")
     assert "do-not-leak" not in result
+
+
+def test_list_files_includes_nested_files(tmp_path):
+    (tmp_path / "main.py").touch()
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "app.py").touch()
+
+    result = list_files(tmp_path)
+
+    assert result.splitlines() == ["main.py", "src/app.py"]
+
+
+def test_list_files_ignores_cache_dirs(tmp_path):
+    (tmp_path / "app.py").touch()
+    (tmp_path / "__pycache__").mkdir()
+    (tmp_path / "__pycache__" / "app.cpython-313.pyc").touch()
+
+    result = list_files(tmp_path)
+
+    assert result.splitlines() == ["app.py"]
+
+
+def test_list_files_empty_workspace_returns_message(tmp_path):
+    result = list_files(tmp_path)
+
+    assert result == "(workspace is empty)"
+
+
 
