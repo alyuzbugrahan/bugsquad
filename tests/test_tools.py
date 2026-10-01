@@ -1,4 +1,6 @@
-from bugsquad.tools import list_files, read_file
+from bugsquad import tools
+from bugsquad.tools import list_files, read_file, run_tests
+
 
 
 def test_read_file_return_content(tmp_path):
@@ -50,4 +52,35 @@ def test_list_files_empty_workspace_returns_message(tmp_path):
     assert result == "(workspace is empty)"
 
 
+def test_run_tests_reports_passed(tmp_path):
+    (tmp_path / "test_ok.py").write_text(
+        "def test_ok():\n  assert 1 + 1 == 2\n", encoding="utf-8" 
+    )
 
+    result = run_tests(tmp_path)
+
+    assert result.startswith("STATUS: PASSED")
+    assert "1 passed" in result
+
+
+def test_run_tests_reports_failed(tmp_path):
+    (tmp_path / "test_bad.py").write_text(
+        "def test_bad():\n  assert 1 + 1 == 3\n", encoding="utf-8"
+    )
+
+    result = run_tests(tmp_path)
+
+    assert result.startswith("STATUS: FAILED")
+    assert "1 failed" in result
+
+
+def test_run_tests_stops_infinite_loop(tmp_path, monkeypatch):
+    monkeypatch.setattr(tools, "TEST_TIMEOUT_SECONDS", 1)
+    (tmp_path / "test_loop.py").write_text(
+        "def test_loop():\n  while True:\n    pass\n", encoding = "utf-8"    
+    )
+
+    result = run_tests(tmp_path)
+
+    assert result.startswith("ERROR: Tests did not finish")
+    

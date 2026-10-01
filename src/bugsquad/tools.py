@@ -65,8 +65,8 @@ def run_tests(workspace: Path) -> str:
             text=True,
             timeout=TEST_TIMEOUT_SECONDS,
         )
-    except subprocess.TimeOutExpired:
-        return f"ERROR: Tests did not finish within {TEST_TIMEOUT_SECONDS} seconds (possible infinite loop.)"
+    except subprocess.TimeoutExpired:
+        return f"ERROR: Tests did not finish within {TEST_TIMEOUT_SECONDS} seconds (possible infinite loop)."
 
     output = completed.stdout + completed.stderr
     if len(output) > MAX_TEST_OUTPUT_CHARS:
