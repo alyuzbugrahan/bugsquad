@@ -15,6 +15,7 @@ def _get_required_env(name: str) -> str:
 client = OpenAI(
     api_key=_get_required_env("LLM_API_KEY"),
     base_url=_get_required_env("LLM_BASE_URL"),
+    max_retries=5,
 )
 MODEL = _get_required_env("LLM_MODEL")
 
