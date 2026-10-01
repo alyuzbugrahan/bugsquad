@@ -1,8 +1,12 @@
+import subprocess
+import sys
 from pathlib import Path
 
 MAX_FILE_CHARS = 20_000
 IGNORED_DIRS = {".git", ".venv", "__pycache__", ".pytest_cache", "node_modules"}
 MAX_LIST_ENTRIES = 200
+TEST_TIMEOUT_SECONDS = 30
+MAX_TEST_OUTPUT_CHARS = 8_000
 
 def _resolve_inside(workspace: Path, path: str) -> Path:
     """Turn a relative path into an absolute one and make sure it stays inside the workspace."""
@@ -48,3 +52,25 @@ def list_files(workspace: Path) -> str:
         shown = "\n".join(files[:MAX_LIST_ENTRIES])
         return shown + f"\n... [{len(files) - MAX_LIST_ENTRIES} more files not shown]"
     return "\n".join(files)
+
+
+def run_tests(workspace: Path) -> str:
+    """Run pytest inside the workspace and return the status plus the test output."""
+    root = workspace.resolve()
+    try:
+        completed = subprocess.run(
+            [sys.executable, "-m", "pytest", ".", "-q", "-p", "no:cacheprovider"],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            timeout=TEST_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeOutExpired:
+        return f"ERROR: Tests did not finish within {TEST_TIMEOUT_SECONDS} seconds (possible infinite loop.)"
+
+    output = completed.stdout + completed.stderr
+    if len(output) > MAX_TEST_OUTPUT_CHARS:
+        output = "...[earlier output truncated]\n" + output[-MAX_TEST_OUTPUT_CHARS:]
+        
+    status = "PASSED" if completed.returncode ==0 else "FAILED"
+    return f"STATUS: {status} (exit code {completed.returncode})\n\n{output}"
