@@ -74,3 +74,28 @@ def run_tests(workspace: Path) -> str:
         
     status = "PASSED" if completed.returncode ==0 else "FAILED"
     return f"STATUS: {status} (exit code {completed.returncode})\n\n{output}"
+
+
+def edit_file(workspace: Path, path: str, old_text: str, new_text: str) -> str:
+    """Replace one exact occurrence of old_text with new_text in a file inside the workspace."""
+    try:
+        target = _resolve_inside(workspace, path)
+        content = target.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return f"ERROR: File not found: {path}"
+    except (ValueError, UnicodeDecodeError, IsADirectoryError) as e:
+        return f"ERROR: {e}"
+
+    if target.name.startswith("test_"):
+        return "ERROR: Test files are read-only. Fix the source code instead."
+    if not old_text:
+        return "ERROR: old_text must not be empty."
+
+    count = content.count(old_text)
+    if count == 0:
+        return "ERROR: old_text was not found. Read the file again and copy the exact text, including spaces."
+    if count > 1:
+        return f"ERROR: old_text appears {count} times. Include more surrounding lines so it matches exactly once."
+
+    target.write_text(content.replace(old_text, new_text, 1), encoding="utf-8")
+    return f"OK: Edited {path}."
