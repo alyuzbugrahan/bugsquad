@@ -1,5 +1,6 @@
 from bugsquad import tools
-from bugsquad.tools import list_files, read_file, run_tests
+from bugsquad.tools import list_files, read_file, run_tests, edit_file
+
 
 
 
@@ -83,4 +84,68 @@ def test_run_tests_stops_infinite_loop(tmp_path, monkeypatch):
     result = run_tests(tmp_path)
 
     assert result.startswith("ERROR: Tests did not finish")
+
+
+# ---------- edit_file ----------
+
+def test_edit_file_replaces_text(tmp_path):
+    (tmp_path / "calc.py").write_text("x = 1\n", encoding="utf-8")
+
+    result = edit_file(tmp_path, "calc.py", "x = 1", "x = 2")
+
+    assert result.startswith("OK")
+    assert (tmp_path / "calc.py").read_text(encoding="utf-8") == "x = 2\n"
+
+
+def test_edit_file_refuses_test_files(tmp_path):
+    original = "assert x == 6\n"
+    (tmp_path / "test_calc.py").write_text(original, encoding="utf-8")
+
+    result = edit_file(tmp_path, "test_calc.py", "== 6", "== 3")
+
+    assert result.startswith("ERROR: Test files are read-only")
+    assert (tmp_path / "test_calc.py").read_text(encoding="utf-8") == original
+
+
+def test_edit_file_text_not_found(tmp_path):
+    original = "x = 1\n"
+    (tmp_path / "calc.py").write_text(original, encoding="utf-8")
+
+    result = edit_file(tmp_path, "calc.py", "y = 5", "y = 6")
+
+    assert result.startswith("ERROR: old_text was not found")
+    assert (tmp_path / "calc.py").read_text(encoding="utf-8") == original
+
+
+def test_edit_file_ambiguous_match(tmp_path):
+    original = "x = 1\nx = 1\n"
+    (tmp_path / "calc.py").write_text(original, encoding="utf-8")
+
+    result = edit_file(tmp_path, "calc.py", "x = 1", "x = 2")
+
+    assert "appears 2 times" in result
+    assert (tmp_path / "calc.py").read_text(encoding="utf-8") == original
+
+
+def test_edit_file_blocks_path_outside_workspace(tmp_path):
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    original = "API_KEY=do-not-touch\n"
+    (tmp_path / "secret.py").write_text(original, encoding="utf-8")
+
+    result = edit_file(workspace, "../secret.py", "do-not-touch", "hacked")
+
+    assert result.startswith("ERROR: Path is outside the workspace")
+    assert (tmp_path / "secret.py").read_text(encoding="utf-8") == original
+
+
+def test_edit_file_rejects_empty_old_text(tmp_path):
+    original = "x = 1\n"
+    (tmp_path / "calc.py").write_text(original, encoding="utf-8")
+
+    result = edit_file(tmp_path, "calc.py", "", "y = 2")
+
+    assert result.startswith("ERROR: old_text must not be empty")
+    assert (tmp_path / "calc.py").read_text(encoding="utf-8") == original
+    
     
