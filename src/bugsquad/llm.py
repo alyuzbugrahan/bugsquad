@@ -30,7 +30,7 @@ def chat(messages: list[dict]) -> str:
 
 def chat_with_tools(messages: list[dict], tools: list[dict]):
     """Send messages plus tool schemas; return the model's message (text and/or tool calls)."""
-    response = client.chat.completions.create(
+    return client.chat.completions.create(
         model=MODEL,
         messages=messages,
         tools=tools,
