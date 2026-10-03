@@ -14,10 +14,10 @@ TASK = "Fix the bug described in issue.md."
 def _diff(original: Path, workspace: Path) -> str:
     """Return a unified diff of every .py file the agent changed."""
     chunks = []
-    for source in sorted(original.rglob("*.py")):
-        relative = source.relative_to(original)
-        before = source.read_text(encoding="utf-8").splitlines(keepends=True)
-        after = (workspace / relative).read_text(encoding="utf-8").splitlines(keepends=True)
+    for changed in sorted(workspace.rglob("*.py")):
+        relative = changed.relative_to(workspace)
+        before = (original / relative).read_text(encoding="utf-8").splitlines(keepends=True)
+        after = changed.read_text(encoding="utf-8").splitlines(keepends=True)
         chunks.extend(difflib.unified_diff(before, after, f"a/{relative}", f"b/{relative}"))
     return "".join(chunks)
 
@@ -34,8 +34,7 @@ def main() -> int:
 
     tmp_root = Path(tempfile.mkdtemp(prefix="bugsquad_"))
     workspace = tmp_root / args.project.name
-    shutil.copytree(args.project, workspace, ignore=shutil.ignore_patterns("__pycache__", ".pytest_cache"))
-
+    shutil.copytree(args.project, workspace, ignore=shutil.ignore_patterns("__pycache__", ".pytest_cache", "hidden"))
     try:
         result = run_agent(workspace, TASK)
         verdict = run_tests(workspace).splitlines()[0]
