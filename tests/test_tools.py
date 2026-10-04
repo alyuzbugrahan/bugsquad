@@ -16,6 +16,34 @@ def test_read_file_missing_file_returns_error(tmp_path):
     assert result.startswith("ERROR: File not found")
 
 
+def test_read_file_long_file_is_paginated(tmp_path, monkeypatch):
+    monkeypatch.setattr(tools, "MAX_READ_LINES", 3)
+    (tmp_path / "big.py").write_text("".join(f"line{i}\n" for i in range(1, 11)), encoding="utf-8")
+
+    result = read_file(tmp_path, "big.py")
+
+    assert result.startswith("[Showing lines 1-3 of 10 in big.py.")
+    assert "start_line=4" in result
+    assert result.endswith("line1\nline2\nline3\n")
+
+
+def test_read_file_line_range(tmp_path):
+    (tmp_path / "big.py").write_text("".join(f"line{i}\n" for i in range(1, 11)), encoding="utf-8")
+
+    result = read_file(tmp_path, "big.py", start_line=4, end_line=5)
+
+    assert result.startswith("[Showing lines 4-5 of 10")
+    assert result.endswith("line4\nline5\n")
+
+
+def test_read_file_start_line_out_of_range(tmp_path):
+    (tmp_path / "big.py").write_text("a\nb\n", encoding="utf-8")
+
+    result = read_file(tmp_path, "big.py", start_line=50)
+
+    assert result.startswith("ERROR: start_line must be between 1 and 2")
+
+
 def test_file_blocks_path_outside_workspace(tmp_path):
     workspace = tmp_path / "workspace"
     workspace.mkdir()

@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 
 from bugsquad import tools
+from bugsquad.tools import MAX_READ_LINES
 
 TOOL_FUNCTIONS = {
     "list_files": tools.list_files,
@@ -24,11 +25,16 @@ TOOL_SCHEMAS = [
         "type": "function",
         "function": {
             "name": "read_file",
-            "description": "Read the full text of a file. Use paths exactly as shown by list_files.",
+            "description": (
+                "Read a text file. Small files are returned in full. Long files are returned "
+                f"{MAX_READ_LINES} lines at a time; use start_line and end_line to read a specific part."
+            ),
             "parameters": {
                 "type": "object",
                 "properties": {
                     "path": {"type": "string", "description": "File path relative to the project root."},
+                    "start_line": {"type": "integer", "description": "First line to read (1-based). Default 1."},
+                    "end_line": {"type": "integer", "description": "Last line to read (inclusive). Optional."},
                 },
                 "required": ["path"],
             },

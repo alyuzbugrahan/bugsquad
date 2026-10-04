@@ -7,6 +7,7 @@ IGNORED_DIRS = {".git", ".venv", "__pycache__", ".pytest_cache", "node_modules"}
 MAX_LIST_ENTRIES = 200
 TEST_TIMEOUT_SECONDS = 30
 MAX_TEST_OUTPUT_CHARS = 8_000
+MAX_READ_LINES = 300
 
 def _resolve_inside(workspace: Path, path: str) -> Path:
     """Turn a relative path into an absolute one and make sure it stays inside the workspace."""
@@ -17,8 +18,10 @@ def _resolve_inside(workspace: Path, path: str) -> Path:
     return target
 
 
-def read_file(workspace: Path, path: str) -> str:
-    """Return the contents of a text file inside the workspace."""
+def read_file(workspace: Path, path: str, start_line: int = 1, end_line: int | None = None) -> str:
+    """Return a text file inside the workspace, or the 1-based inclusive line range start_line..end_line.
+
+    At most MAX_READ_LINES lines are returned per call."""
     try:
         target = _resolve_inside(workspace, path)
         text = target.read_text(encoding="utf-8")
@@ -27,9 +30,28 @@ def read_file(workspace: Path, path: str) -> str:
     except (ValueError, UnicodeDecodeError, IsADirectoryError) as e:
         return f"ERROR: {e}"
 
-    if len(text) > MAX_FILE_CHARS:
-        return text[:MAX_FILE_CHARS] + f"\n... [truncated, {len(text)} chars total]"
-    return text
+    lines = text.splitlines(keepends=True)
+    total = len(lines)
+    if total == 0:
+        return text
+    if not 1 <= start_line <= total:
+        return f"ERROR: start_line must be between 1 and {total} for {path}."
+
+    last = start_line + MAX_READ_LINES - 1
+    if end_line is not None:
+        if end_line < start_line:
+            return "ERROR: end_line must be greater than or equal to start_line."
+        last = min(last, end_line)
+    last = min(last, total)
+
+    chunk = "".join(lines[start_line - 1:last])
+    if start_line == 1 and last == total:
+        return chunk
+
+    note = f"[Showing lines {start_line}-{last} of {total} in {path}."
+    if last < total:
+        note += f" Call read_file again with start_line={last + 1} to continue, or use search_code to jump to a name."
+    return note + "]\n" + chunk
 
 
 def list_files(workspace: Path) -> str:
