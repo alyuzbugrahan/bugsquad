@@ -92,7 +92,7 @@ Each case has an `issue.md`, the buggy code, visible tests and `hidden/test_hidd
 Requires Python 3.10+.
 
 ```bash
-git clone https://github.com/<your-username>/bugsquad.git
+git clone https://github.com/<alyuzbugrahan>/bugsquad.git
 cd bugsquad
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
