@@ -10,7 +10,7 @@ from bugsquad.tools import run_tests
 from bugsquad.workspace import HIDDEN_DIR, cleanup, prepare_workspace
 
 TASK = "Fix the bug described in issue.md."
-DIFFICULTIES = ["easy", "medium", "hard"]
+DIFFICULTIES = ["easy", "medium", "hard", "expert"]
 
 
 def grade(project: Path, workspace: Path) -> bool:

@@ -34,5 +34,20 @@
   },
   "012_two_bugs": {
     "difficulty": "hard"
+  },
+  "013_large_project": {
+    "difficulty": "expert"
+  },
+  "014_long_file": {
+    "difficulty": "expert"
+  },
+  "015_shared_function": {
+    "difficulty": "expert"
+  },
+  "016_tests_already_pass": {
+    "difficulty": "expert"
+  },
+  "017_unit_mismatch": {
+    "difficulty": "expert"
   }
 }
