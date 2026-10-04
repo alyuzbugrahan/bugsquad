@@ -33,7 +33,7 @@ def main() -> int:
         print(f"error: {args.project} has no issue.md", file=sys.stderr)
         return 2
 
-        workspace = prepare_workspace(args.project)
+    workspace = prepare_workspace(args.project)
     try:
         result = run_agent(workspace, TASK)
         verdict = run_tests(workspace).splitlines()[0]
@@ -50,4 +50,5 @@ def main() -> int:
             print(f"\nWorking copy kept at: {workspace}")
         else:
             cleanup(workspace)
+
     return 0 if verdict.startswith("STATUS: PASSED") else 1
