@@ -8,6 +8,7 @@ MAX_LIST_ENTRIES = 200
 TEST_TIMEOUT_SECONDS = 30
 MAX_TEST_OUTPUT_CHARS = 8_000
 MAX_READ_LINES = 300
+MAX_SEARCH_RESULTS = 50
 
 def _resolve_inside(workspace: Path, path: str) -> Path:
     """Turn a relative path into an absolute one and make sure it stays inside the workspace."""
@@ -121,3 +122,30 @@ def edit_file(workspace: Path, path: str, old_text: str, new_text: str) -> str:
 
     target.write_text(content.replace(old_text, new_text, 1), encoding="utf-8")
     return f"OK: Edited {path}."
+
+
+def search_code(workspace: Path, query: str) -> str:
+    """Find lines that contain query (plain text, case-sensitive) in the workspace's text files."""
+    if not query:
+        return "ERROR: query must not be empty."
+
+    root = workspace.resolve()
+    matches = []
+    for path in sorted(root.rglob("*")):
+        relative = path.relative_to(root)
+        if any(part in IGNORED_DIRS for part in relative.parts) or not path.is_file():
+            continue
+        try:
+            lines = path.read_text(encoding="utf-8").splitlines()
+        except UnicodeDecodeError:
+            continue
+        for number, line in enumerate(lines, start=1):
+            if query in line:
+                matches.append(f"{relative.as_posix()}:{number}: {line.strip()[:200]}")
+
+    if not matches:
+        return f"No matches for {query!r}."
+    if len(matches) > MAX_SEARCH_RESULTS:
+        shown = "\n".join(matches[:MAX_SEARCH_RESULTS])
+        return shown + f"\n... [{len(matches) - MAX_SEARCH_RESULTS} more matches. Use a more specific query.]"
+    return "\n".join(matches)

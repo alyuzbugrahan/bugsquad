@@ -9,6 +9,7 @@ TOOL_FUNCTIONS = {
     "list_files": tools.list_files,
     "read_file": tools.read_file,
     "edit_file": tools.edit_file,
+    "search_code": tools.search_code,
     "run_tests": tools.run_tests,
 }
 
@@ -37,6 +38,24 @@ TOOL_SCHEMAS = [
                     "end_line": {"type": "integer", "description": "Last line to read (inclusive). Optional."},
                 },
                 "required": ["path"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_code",
+            "description": (
+                "Search all project files for a plain-text snippet (case-sensitive) and return "
+                "matching lines as 'path:line: text'. Use it to find where a function or variable "
+                "is defined or used, then read only those lines with read_file."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Exact text to search for, e.g. 'def bulk_discount'."},
+                },
+                "required": ["query"],
             },
         },
     },

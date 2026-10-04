@@ -1,6 +1,5 @@
 from bugsquad import tools
-from bugsquad.tools import list_files, read_file, run_tests, edit_file
-
+from bugsquad.tools import edit_file, list_files, read_file, run_tests, search_code
 
 
 
@@ -175,5 +174,39 @@ def test_edit_file_rejects_empty_old_text(tmp_path):
 
     assert result.startswith("ERROR: old_text must not be empty")
     assert (tmp_path / "calc.py").read_text(encoding="utf-8") == original
-    
-    
+
+
+
+def test_search_code_finds_matches_with_line_numbers(tmp_path):
+    (tmp_path / "pkg").mkdir()
+    (tmp_path / "pkg" / "a.py").write_text("x = 1\ndef target():\n    pass\n", encoding="utf-8")
+    (tmp_path / "b.py").write_text("target()\n", encoding="utf-8")
+
+    result = search_code(tmp_path, "target")
+
+    assert result.splitlines() == ["b.py:1: target()", "pkg/a.py:2: def target():"]
+
+
+def test_search_code_ignores_cache_dirs(tmp_path):
+    (tmp_path / "__pycache__").mkdir()
+    (tmp_path / "__pycache__" / "x.py").write_text("target\n", encoding="utf-8")
+
+    result = search_code(tmp_path, "target")
+
+    assert result == "No matches for 'target'."
+
+
+def test_search_code_rejects_empty_query(tmp_path):
+    result = search_code(tmp_path, "")
+
+    assert result.startswith("ERROR: query must not be empty")
+
+
+def test_search_code_caps_results(tmp_path, monkeypatch):
+    monkeypatch.setattr(tools, "MAX_SEARCH_RESULTS", 2)
+    (tmp_path / "a.py").write_text("hit\nhit\nhit\nhit\n", encoding="utf-8")
+
+    result = search_code(tmp_path, "hit")
+
+    assert result.splitlines()[:2] == ["a.py:1: hit", "a.py:2: hit"]
+    assert "2 more matches" in result
