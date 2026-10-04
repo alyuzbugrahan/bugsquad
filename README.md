@@ -6,18 +6,7 @@ The agent reads a bug report, explores the code, runs the tests, makes a minimal
 
 The agent loop is written from scratch (no LangChain or similar framework) on top of an OpenAI-compatible API, and currently runs on Google Gemini.
 
-```text
-$ bugsquad benchmarks/010_misleading_issue
-
-=== Changes ===
---- a/parsing.py
-+++ b/parsing.py
--    return float(text.replace(",", "."))
-+    return float(text.replace(".", "").replace(",", "."))
-
-Independent check: STATUS: PASSED (exit code 0)
-finished=True  steps=9  tokens=9741+833  cost=$0.0104
-```
+![BugSquad fixing a bug whose issue blames the wrong function](docs/demo.gif)
 
 ## Results
 
