@@ -1,0 +1,38 @@
+{
+  "001_off_by_one": {
+    "difficulty": "easy"
+  },
+  "002_wrong_comparison": {
+    "difficulty": "easy"
+  },
+  "003_missing_lowercase": {
+    "difficulty": "easy"
+  },
+  "004_mutable_default": {
+    "difficulty": "easy"
+  },
+  "005_integer_division": {
+    "difficulty": "medium"
+  },
+  "006_early_return": {
+    "difficulty": "medium"
+  },
+  "007_leap_year": {
+    "difficulty": "medium"
+  },
+  "008_missing_key": {
+    "difficulty": "medium"
+  },
+  "009_bug_in_helper": {
+    "difficulty": "hard"
+  },
+  "010_misleading_issue": {
+    "difficulty": "hard"
+  },
+  "011_class_state": {
+    "difficulty": "hard"
+  },
+  "012_two_bugs": {
+    "difficulty": "hard"
+  }
+}
