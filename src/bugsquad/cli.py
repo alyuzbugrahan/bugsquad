@@ -7,6 +7,7 @@ from pathlib import Path
 
 from bugsquad.agent import run_agent
 from bugsquad.tools import run_tests
+from bugsquad.workspace import cleanup, prepare_workspace
 
 TASK = "Fix the bug described in issue.md."
 
@@ -32,9 +33,7 @@ def main() -> int:
         print(f"error: {args.project} has no issue.md", file=sys.stderr)
         return 2
 
-    tmp_root = Path(tempfile.mkdtemp(prefix="bugsquad_"))
-    workspace = tmp_root / args.project.name
-    shutil.copytree(args.project, workspace, ignore=shutil.ignore_patterns("__pycache__", ".pytest_cache", "hidden"))
+        workspace = prepare_workspace(args.project)
     try:
         result = run_agent(workspace, TASK)
         verdict = run_tests(workspace).splitlines()[0]
@@ -50,6 +49,5 @@ def main() -> int:
         if args.keep:
             print(f"\nWorking copy kept at: {workspace}")
         else:
-            shutil.rmtree(tmp_root)
-
+            cleanup(workspace)
     return 0 if verdict.startswith("STATUS: PASSED") else 1
